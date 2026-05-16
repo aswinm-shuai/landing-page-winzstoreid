@@ -230,7 +230,21 @@ document.getElementById('checkoutForm').addEventListener('submit', async (e) => 
       custId = existingCust.id;
     } else {
       custId = customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1;
-      customers.push({ id: custId, nama: name, wa: phone, created_at: new Date().toISOString() });
+      
+      const tgl = new Date();
+      const yy = tgl.getFullYear();
+      const mm = String(tgl.getMonth() + 1).padStart(2, '0');
+      const dd = String(tgl.getDate()).padStart(2, '0');
+      
+      customers.push({ 
+        id: custId, 
+        nama: name, 
+        wa: phone, 
+        created_at: tgl.toISOString(),
+        tgl_order: `${yy}-${mm}-${dd}`,
+        status: 'aktif',
+        catatan: 'Customer dari Landing Page'
+      });
       customerUpdated = true;
     }
 
