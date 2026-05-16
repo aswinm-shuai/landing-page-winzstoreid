@@ -17,12 +17,13 @@
   <nav class="navbar">
     <div class="nav-container">
       <div class="brand">
-        <img src="landing-page/assets/WhatsApp Image 2026-05-02 at 23.45.16.jpeg" alt="Logo" class="brand-logo"
+        <img src="landing-page/public/assets/WhatsApp Image 2026-05-02 at 23.45.16.jpeg" alt="Logo" class="brand-logo"
           id="storeLogo">
         <span class="brand-name" id="storeName">Premium Store</span>
       </div>
       <div style="display:flex;gap:12px;align-items:center;">
-        <button class="btn-primary-outline" id="btnNavWarranty" style="border-color:transparent;color:var(--text-muted);">Klaim Garansi</button>
+        <button class="btn-primary-outline" id="btnNavWarranty"
+          style="border-color:transparent;color:var(--text-muted);">Klaim Garansi</button>
         <a href="#products" class="btn-primary-outline">Lihat Produk</a>
       </div>
     </div>
@@ -43,8 +44,10 @@
   <!-- DESCRIPTION SECTION -->
   <section class="description-section">
     <div class="desc-card">
-      <i class="bi bi-shield-check" style="font-size: 1.8rem; color: var(--accent); margin-bottom: 8px; display: inline-block;"></i>
-      <p class="desc-text">Winz Store adalah platform penyedia layanan akun premium yang aman, cepat, dan terpercaya. Proses instan, harga terjangkau, dan dukungan pelanggan siap membantu kapan saja.</p>
+      <i class="bi bi-shield-check"
+        style="font-size: 1.8rem; color: var(--accent); margin-bottom: 8px; display: inline-block;"></i>
+      <p class="desc-text">Winz Store adalah platform penyedia layanan akun premium yang aman, cepat, dan terpercaya.
+        Proses instan, harga terjangkau, dan dukungan pelanggan siap membantu kapan saja.</p>
     </div>
   </section>
 
@@ -53,10 +56,13 @@
     <div class="section-header">
       <h2 class="section-title">Pilih Paket Anda</h2>
       <p class="section-desc">Beragam pilihan layanan premium yang disesuaikan dengan kebutuhan Anda.</p>
-      
+
       <div class="search-container" style="max-width:500px;margin:24px auto 0;position:relative;">
-        <i class="bi bi-search" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-muted);"></i>
-        <input type="text" id="searchInput" class="form-input" style="padding-left:42px;background:var(--bg-elevated);border-radius:99px;" placeholder="Cari aplikasi premium...">
+        <i class="bi bi-search"
+          style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-muted);"></i>
+        <input type="text" id="searchInput" class="form-input"
+          style="padding-left:42px;background:var(--bg-elevated);border-radius:99px;"
+          placeholder="Cari aplikasi premium...">
       </div>
     </div>
 
@@ -70,7 +76,8 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <div class="footer-content" style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:12px;align-items:center;">
+    <div class="footer-content"
+      style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:12px;align-items:center;">
       <div class="footer-brand" id="footerStoreName">Premium Store</div>
       <div style="display:flex;gap:16px;font-size:0.9rem;">
         <a href="#products" style="color:var(--text-muted);text-decoration:none;">Produk</a>
@@ -90,7 +97,7 @@
       <div class="modal-body">
         <div class="order-summary">
           <div class="summary-product">
-            <img src="landing-page/assets/WhatsApp Image 2026-05-02 at 23.45.16.jpeg" alt="Product"
+            <img src="landing-page/public/assets/WhatsApp Image 2026-05-02 at 23.45.16.jpeg" alt="Product"
               id="checkoutProductImg" class="summary-img">
             <div>
               <div class="summary-title" id="checkoutProductName">Nama Produk</div>
@@ -170,7 +177,8 @@
           </div>
           <div class="form-group">
             <label>Produk / Layanan <span style="color:var(--accent);">*</span></label>
-            <select id="wProduct" class="form-input" required style="cursor:pointer; appearance:auto; -webkit-appearance:auto; -moz-appearance:auto;">
+            <select id="wProduct" class="form-input" required
+              style="cursor:pointer; appearance:auto; -webkit-appearance:auto; -moz-appearance:auto;">
               <option value="" disabled selected>Pilih Produk / Layanan...</option>
             </select>
           </div>
@@ -180,11 +188,13 @@
           </div>
           <div class="form-group">
             <label>Keterangan Kendala <span style="color:var(--accent);">*</span></label>
-            <textarea id="wDesc" class="form-input" placeholder="Jelaskan detail kendala yang dialami..." rows="3" required style="resize:vertical;"></textarea>
+            <textarea id="wDesc" class="form-input" placeholder="Jelaskan detail kendala yang dialami..." rows="3"
+              required style="resize:vertical;"></textarea>
           </div>
           <div class="form-group">
             <label>Upload Bukti Masalah <span style="color:var(--accent);">*</span></label>
-            <input type="file" id="wAttachment" class="form-input" accept="image/jpeg, image/png, image/webp, application/pdf" required style="padding:10px;">
+            <input type="file" id="wAttachment" class="form-input"
+              accept="image/jpeg, image/png, image/webp, application/pdf" required style="padding:10px;">
             <span class="form-hint">Format: JPG, PNG, WEBP, PDF (Maks. 5 MB)</span>
           </div>
           <button type="submit" class="btn-primary btn-block" id="btnSubmitWarranty">Kirim Klaim</button>
@@ -193,10 +203,13 @@
         <div id="warrantySuccess" style="display:none; text-align:center; padding: 20px 0;">
           <div style="font-size:3rem; color:#10B981; margin-bottom:16px;"><i class="bi bi-check-circle-fill"></i></div>
           <h4 style="font-size:1.2rem; margin-bottom:8px;">Klaim Berhasil Dikirim</h4>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">Klaim garansi Anda sedang diproses. Mohon simpan nomor tiket berikut untuk melacak status.</p>
-          <div style="background:var(--bg-main); padding:16px; border-radius:var(--radius-md); border:1px dashed var(--border); margin-bottom:16px;">
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">Klaim garansi Anda sedang diproses.
+            Mohon simpan nomor tiket berikut untuk melacak status.</p>
+          <div
+            style="background:var(--bg-main); padding:16px; border-radius:var(--radius-md); border:1px dashed var(--border); margin-bottom:16px;">
             <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Nomor Tiket:</div>
-            <div style="font-size:1.25rem; font-weight:700; color:var(--accent); font-family:monospace;" id="wTicketNumber">WG-2026-000</div>
+            <div style="font-size:1.25rem; font-weight:700; color:var(--accent); font-family:monospace;"
+              id="wTicketNumber">WG-2026-000</div>
           </div>
           <button class="btn-primary-outline btn-block" id="btnDoneWarranty">Tutup</button>
         </div>
