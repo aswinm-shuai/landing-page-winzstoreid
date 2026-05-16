@@ -1,5 +1,5 @@
 import { db, storage, STORE_UID as DEFAULT_STORE_UID } from './firebase-config.js';
-import { collection, doc, getDoc, setDoc, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, doc, getDoc, setDoc, addDoc, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 // Global Variables
@@ -118,7 +118,7 @@ function renderProducts(pakets) {
     return `
       <div class="product-card">
         <div class="product-header">
-          <img src="${imgSrc}" alt="${p.nama}" class="product-logo" onerror="this.src='assets/placeholder-logo.png'">
+          <img src="${imgSrc}" alt="${p.nama}" class="product-logo" onerror="this.onerror=null;this.src='assets/placeholder-logo.png'">
           <div class="product-info">
             <h3 class="product-name">${p.nama}</h3>
             <span class="product-category">${p.durasi} Hari</span>
@@ -190,61 +190,97 @@ document.getElementById('checkoutForm').addEventListener('submit', async (e) => 
   btn.disabled = true;
 
   try {
-    // A. Check / Add Customer
-    const custRef = doc(db, 'customers', currentStoreUid);
-    const custSnap = await getDoc(custRef);
-    let customers = custSnap.exists() ? (custSnap.data().items || []) : [];
-    
-    let existingCust = customers.find(c => c.wa === phone || formatPhone(c.wa || '') === phone);
-    let custId = existingCust ? existingCust.id : null;
-    
-    if (!existingCust) {
-      custId = customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1;
-      customers.push({
-        id: custId,
-        nama: name,
-        wa: phone,
-        catatan: 'Dari Landing Page'
-      });
-      await setDoc(custRef, { items: customers });
-    }
-
-    // B. Create Transaction (Order)
     currentInvoiceNumber = generateInvoice();
-    const d = new Date();
-    const yyyyMmDd = d.toISOString().split('T')[0];
-    
-    // Hitung expired date
-    const expDate = new Date(d);
-    expDate.setDate(expDate.getDate() + (currentSelectedProduct.durasi || 30));
-    const expYyyyMmDd = expDate.toISOString().split('T')[0];
 
-    const trxRef = doc(db, 'transaksis', currentStoreUid);
-    const trxSnap = await getDoc(trxRef);
-    let transaksis = trxSnap.exists() ? (trxSnap.data().items || []) : [];
-    
-    currentTransactionId = transaksis.length ? Math.max(...transaksis.map(t => t.id)) + 1 : 1;
-    
-    transaksis.push({
-      id: currentTransactionId,
-      invoice_number: currentInvoiceNumber,
-      tgl: yyyyMmDd,
-      custId: custId,
-      paketId: currentSelectedProduct.id,
+    await addDoc(collection(db, 'live_orders'), {
+      storeUid: currentStoreUid,
+      nama: name,
+      wa: phone,
+      produk: currentSelectedProduct.nama,
       harga: currentSelectedProduct.harga,
-      hpp: currentSelectedProduct.hpp,
-      profit: currentSelectedProduct.harga - currentSelectedProduct.hpp,
-      mulai: yyyyMmDd,
-      expired: expYyyyMmDd,
-      statusLangganan: 'aktif',
-      statusBayar: 'pending',          // Transaksi status Pending
-      paymentStatus: 'awaiting_payment', // Custom field untuk web
-      storeName: storeName,
-      customerNotes: 'Order via Landing Page',
-      timestamp: Date.now()
+      durasi: currentSelectedProduct.durasi,
+      catatan: 'Dari Landing Page',
+      timestamp: serverTimestamp(),
+      status: 'pending',
+      invoice: currentInvoiceNumber
     });
 
-    await setDoc(trxRef, { items: transaksis });
+    // D. Sinkronisasi ke Transaksi SubFlow Admin
+    const custRef = doc(db, 'customers', currentStoreUid);
+    const trxRef = doc(db, 'transaksis', currentStoreUid);
+    
+    const [custSnap, trxSnap] = await Promise.all([
+      getDoc(custRef),
+      getDoc(trxRef)
+    ]);
+    
+    let customers = custSnap.exists() ? (custSnap.data().items || []) : [];
+    let transaksis = trxSnap.exists() ? (trxSnap.data().items || []) : [];
+    
+    let custId = null;
+    let customerUpdated = false;
+    const existingCust = customers.find(c => {
+      if (!c.wa) return false;
+      let existingWa = c.wa.toString().replace(/\D/g, '');
+      if (existingWa.startsWith('0')) existingWa = '62' + existingWa.substring(1);
+      return existingWa === phone;
+    });
+
+    if (existingCust) {
+      custId = existingCust.id;
+    } else {
+      custId = customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1;
+      customers.push({ id: custId, nama: name, wa: phone, created_at: new Date().toISOString() });
+      customerUpdated = true;
+    }
+
+    const duplicateTrx = transaksis.find(t => t.invoice_number === currentInvoiceNumber);
+    if (!duplicateTrx) {
+      const today = new Date();
+      // Format YYYY-MM-DD using local time safely
+      const yy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const tglStr = `${yy}-${mm}-${dd}`;
+      
+      const expDate = new Date(today);
+      expDate.setDate(expDate.getDate() + currentSelectedProduct.durasi);
+      const e_yy = expDate.getFullYear();
+      const e_mm = String(expDate.getMonth() + 1).padStart(2, '0');
+      const e_dd = String(expDate.getDate()).padStart(2, '0');
+      const expiredStr = `${e_yy}-${e_mm}-${e_dd}`;
+      
+      const newTrxId = transaksis.length ? Math.max(...transaksis.map(t => t.id)) + 1 : 1;
+      
+      transaksis.push({
+        id: newTrxId,
+        tgl: tglStr,
+        custId: custId,
+        paketId: currentSelectedProduct.id,
+        invoice_number: currentInvoiceNumber,
+        harga: currentSelectedProduct.harga,
+        hpp: currentSelectedProduct.hpp || 0,
+        profit: currentSelectedProduct.harga - (currentSelectedProduct.hpp || 0),
+        mulai: tglStr,
+        expired: expiredStr,
+        statusLangganan: 'aktif',
+        statusBayar: 'pending',
+        suppId: null,
+        catatan: 'Order dari Landing Page',
+        customerNotes: `Terima kasih telah berbelanja di ${storeName}.`,
+        accountEmail: '',
+        accountPassword: '',
+        accountProfil: '',
+        accountPin: ''
+      });
+
+      const batch = writeBatch(db);
+      if (customerUpdated) {
+        batch.set(custRef, { items: customers });
+      }
+      batch.set(trxRef, { items: transaksis });
+      await batch.commit();
+    }
 
     // Success -> Show QRIS
     document.getElementById('checkoutModal').classList.remove('active');
@@ -270,19 +306,6 @@ document.getElementById('btnConfirmPayment').addEventListener('click', async () 
   btn.disabled = true;
 
   try {
-    // Update Transaction
-    const trxRef = doc(db, 'transaksis', currentStoreUid);
-    const trxSnap = await getDoc(trxRef);
-    if (trxSnap.exists()) {
-      let transaksis = trxSnap.data().items || [];
-      const idx = transaksis.findIndex(t => t.id === currentTransactionId);
-      if (idx >= 0) {
-        transaksis[idx].paymentStatus = 'paid_confirmation';
-        transaksis[idx].confirmedAt = Date.now();
-        await setDoc(trxRef, { items: transaksis });
-      }
-    }
-
     // Redirect to WhatsApp
     const waText = `Halo, saya sudah melakukan pembayaran.\n\nNama: ${document.getElementById('custName').value}\nNomor: ${document.getElementById('custWa').value}\nProduk: ${currentSelectedProduct.nama}\nDurasi: ${currentSelectedProduct.durasi} Hari\nTotal: ${formatRupiah(currentSelectedProduct.harga)}\n\nInvoice: ${currentInvoiceNumber}\n\nMohon segera diproses. Terima kasih.`;
     
