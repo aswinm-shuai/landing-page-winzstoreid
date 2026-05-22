@@ -1,506 +1,644 @@
-// Debug line 1
-// Debug line 2
-// Debug line 3
-// Debug line 4
-// Debug line 5
-// Debug line 6
-// Debug line 7
-// Debug line 8
-// Debug line 9
-// Debug line 10
-// Debug line 11
-// Debug line 12
-// Debug line 13
-// Debug line 14
-// Debug line 15
-// Debug line 16
-// Debug line 17
-// Debug line 18
-// Debug line 19
-// Debug line 20
+:root {
+  --bg-main: #0B0F19;
+  --bg-card: #111827;
+  --bg-elevated: #1F2937;
 
-import { db, storage, STORE_UID as DEFAULT_STORE_UID } from './firebase-config.js';
-import { collection, doc, getDoc, setDoc, addDoc, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+  --text-main: #F3F4F6;
+  --text-muted: #9CA3AF;
 
-// Global Variables
-let currentStoreUid = DEFAULT_STORE_UID;
-let storeName = "Premium Store";
-let storeWa = "";
-let currentSelectedProduct = null;
-let currentInvoiceNumber = "";
-let currentTransactionId = null;
-let currentQrisUrl = null;
+  --accent: #007fff;
+  --accent-hover: #007fff;
+  --accent-glow: rgba(29, 114, 225, 0.25);
 
-// Format Currency
-function formatRupiah(number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+  --border: #374151;
+  --radius-sm: 8px;
+  --radius-lg: 18px;
+
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.8);
 }
 
-function formatPhone(phone) {
-  let f = phone.replace(/\D/g, '');
-  if (f.startsWith('08')) f = '62' + f.substring(1);
-  else if (f.startsWith('8')) f = '62' + f;
-  return f;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-// Generate Invoice Number
-function generateInvoice() {
-  const d = new Date();
-  const yy = String(d.getFullYear()).slice(-2);
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const rand = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-  return `INV-${yy}${mm}${dd}-${rand}`;
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-// Init Function
-async function init() {
-  document.getElementById('currentYear').textContent = new Date().getFullYear();
-  
-  // Parse URL to get store ID
-  const urlParams = new URLSearchParams(window.location.search);
-  const storeParam = urlParams.get('store') || urlParams.get('u');
-  if (storeParam) {
-    currentStoreUid = storeParam;
-  }
-  
-  if (currentStoreUid === "YOUR_UID_HERE") {
-    alert("Silakan atur STORE_UID di file firebase-config.js terlebih dahulu.");
-    return;
-  }
-
-  // 1. Fetch Store Settings
-  onSnapshot(doc(db, 'users', currentStoreUid), (snap) => {
-    if (snap.exists()) {
-      const data = snap.data();
-      storeName = data.storeName || data.name || "Premium Store";
-      storeWa = data.whatsappStore || data.storeWhatsapp || "";
-      
-      const logoUrl = data.logoUrl || data.storeLogo || 'https://placehold.co/100x100/png?text=Logo'; // fallback
-      currentQrisUrl = data.qrisUrl || null;
-      
-      document.getElementById('storeName').textContent = storeName;
-      document.getElementById('footerStoreName').textContent = storeName;
-      document.title = storeName + " - Layanan Premium";
-      
-      const storeLogoEl = document.getElementById('storeLogo');
-      if (storeLogoEl) storeLogoEl.src = logoUrl;
-    }
-  });
-
-  // 2. Fetch Products (Pakets)
-  onSnapshot(doc(db, 'pakets', currentStoreUid), (snap) => {
-    const grid = document.getElementById('productGrid');
-    if (!snap.exists()) {
-      grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color: var(--text-muted);">Belum ada produk yang tersedia.</p>';
-      return;
-    }
-
-    const pakets = snap.data().items || [];
-    const activePakets = pakets.filter(p => p.status === 'aktif');
-    
-    // Save pakets globally
-    window._paketsData = activePakets;
-    renderProducts(activePakets);
-
-    // Render Dropdown Klaim Garansi
-    const wProductSelect = document.getElementById('wProduct');
-    if (wProductSelect) {
-      wProductSelect.innerHTML = '<option value="" disabled selected>Pilih Produk / Layanan...</option>' + 
-        activePakets.map(p => {
-          return `<option value="${p.id}">${p.nama} • ${p.durasi} Hari</option>`;
-        }).join('');
-    }
-  });
-
-  // Search logic
-  document.getElementById('searchInput')?.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase();
-    if (!window._paketsData) return;
-    
-    const filtered = window._paketsData.filter(p => {
-      const nama = (p.nama || '').toLowerCase();
-      const deskripsi = (p.deskripsi || '').toLowerCase();
-      return nama.includes(query) || deskripsi.includes(query);
-    });
-    
-    renderProducts(filtered);
-  });
+/* NAVBAR */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  display: flex;
+  align-items: center;
 }
 
-function renderProducts(pakets) {
-  const grid = document.getElementById('productGrid');
-  if (pakets.length === 0) {
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color: var(--text-muted);">Produk yang Anda cari tidak tersedia.</p>';
-    return;
-  }
-
-  grid.innerHTML = pakets.map(p => {
-    const imgSrc = p.imageUrl || 'assets/placeholder-logo.png';
-    return `
-      <div class="product-card">
-        <div class="product-header">
-          <img src="${imgSrc}" alt="${p.nama}" class="product-logo" onerror="this.onerror=null;this.src='assets/placeholder-logo.png'">
-          <div class="product-info">
-            <h3 class="product-name">${p.nama}</h3>
-            <span class="product-category">${p.durasi} Hari</span>
-          </div>
-        </div>
-        <div class="product-price">${formatRupiah(p.harga)}</div>
-        <button class="btn-primary" onclick="window.openCheckout(${p.id})">Pesan Sekarang</button>
-      </div>
-    `;
-  }).join('');
+.nav-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-// 3. Modals Logic
-window.openCheckout = function(productId) {
-  const p = window._paketsData.find(x => x.id === productId);
-  if (!p) return;
-  currentSelectedProduct = p;
-
-  document.getElementById('checkoutProductImg').src = p.imageUrl || 'assets/placeholder-logo.png';
-  document.getElementById('checkoutProductName').textContent = p.nama;
-  document.getElementById('checkoutProductDurasi').textContent = p.durasi + " Hari";
-  document.getElementById('checkoutProductPrice').textContent = formatRupiah(p.harga);
-  
-  document.getElementById('checkoutModal').classList.add('active');
-};
-
-document.getElementById('closeCheckoutBtn')?.addEventListener('click', () => {
-  document.getElementById('checkoutModal').classList.remove('active');
-});
-
-// Warranty Modal Toggle
-document.getElementById('btnNavWarranty')?.addEventListener('click', () => {
-  document.getElementById('warrantyModal').classList.add('active');
-});
-document.getElementById('btnFooterWarranty')?.addEventListener('click', (e) => {
-  e.preventDefault();
-  document.getElementById('warrantyModal').classList.add('active');
-});
-document.getElementById('closeWarrantyBtn')?.addEventListener('click', () => {
-  document.getElementById('warrantyModal').classList.remove('active');
-});
-document.getElementById('btnDoneWarranty')?.addEventListener('click', () => {
-  document.getElementById('warrantyModal').classList.remove('active');
-  document.getElementById('warrantyForm').reset();
-  document.getElementById('warrantyForm').style.display = 'block';
-  document.getElementById('warrantySuccess').style.display = 'none';
-});
-
-// 4. Form Submission (Create Order)
-let isOrderSubmitting = false;
-
-document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  if (isOrderSubmitting) return;
-  
-  const name = document.getElementById('custName').value.trim();
-  const phoneRaw = document.getElementById('custWa').value.trim();
-  const phone = formatPhone(phoneRaw);
-  
-  if (!name || !phone) {
-    alert('Nama dan Nomor WhatsApp wajib diisi.');
-    return;
-  }
-
-  isOrderSubmitting = true;
-  const btn = document.getElementById('btnSubmitOrder');
-  btn.textContent = "Memproses...";
-  btn.disabled = true;
-
-  try {
-    currentInvoiceNumber = generateInvoice();
-
-    // We will save live_orders at the end inside the batch to prevent race condition
-
-    // D. Sinkronisasi ke Transaksi SubFlow Admin
-    const custRef = doc(db, 'customers', currentStoreUid);
-    const trxRef = doc(db, 'transaksis', currentStoreUid);
-    
-    const [custSnap, trxSnap] = await Promise.all([
-      getDoc(custRef),
-      getDoc(trxRef)
-    ]);
-    
-    let customers = custSnap.exists() ? (custSnap.data().items || []) : [];
-    let transaksis = trxSnap.exists() ? (trxSnap.data().items || []) : [];
-    
-    let custId = null;
-    let customerUpdated = false;
-    const existingCust = customers.find(c => {
-      if (!c.wa) return false;
-      let existingWa = c.wa.toString().replace(/\D/g, '');
-      if (existingWa.startsWith('08')) existingWa = '62' + existingWa.substring(1);
-      else if (existingWa.startsWith('8')) existingWa = '62' + existingWa;
-      return existingWa === phone;
-    });
-
-    if (existingCust) {
-      custId = existingCust.id;
-    } else {
-      custId = customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1;
-      
-      const tgl = new Date();
-      const yy = tgl.getFullYear();
-      const mm = String(tgl.getMonth() + 1).padStart(2, '0');
-      const dd = String(tgl.getDate()).padStart(2, '0');
-      
-      customers.push({ 
-        id: custId, 
-        nama: name, 
-        wa: phone, 
-        created_at: tgl.toISOString(),
-        tgl_order: `${yy}-${mm}-${dd}`,
-        status: 'aktif',
-        catatan: 'Customer dari Landing Page'
-      });
-      customerUpdated = true;
-    }
-
-    const duplicateTrx = transaksis.find(t => t.invoice_number === currentInvoiceNumber);
-    if (!duplicateTrx) {
-      const today = new Date();
-      // Format YYYY-MM-DD using local time safely
-      const yy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const tglStr = `${yy}-${mm}-${dd}`;
-      
-      const expDate = new Date(today);
-      expDate.setDate(expDate.getDate() + currentSelectedProduct.durasi);
-      const e_yy = expDate.getFullYear();
-      const e_mm = String(expDate.getMonth() + 1).padStart(2, '0');
-      const e_dd = String(expDate.getDate()).padStart(2, '0');
-      const expiredStr = `${e_yy}-${e_mm}-${e_dd}`;
-      
-      const newTrxId = transaksis.length ? Math.max(...transaksis.map(t => t.id)) + 1 : 1;
-      
-      transaksis.push({
-        id: newTrxId,
-        tgl: tglStr,
-        custId: custId,
-        paketId: currentSelectedProduct.id,
-        invoice_number: currentInvoiceNumber,
-        harga: currentSelectedProduct.harga,
-        hpp: currentSelectedProduct.hpp || 0,
-        profit: currentSelectedProduct.harga - (currentSelectedProduct.hpp || 0),
-        mulai: tglStr,
-        expired: expiredStr,
-        statusLangganan: 'aktif',
-        statusBayar: 'pending',
-        suppId: null,
-        catatan: 'Order dari Landing Page',
-        customerNotes: `Terima kasih telah berbelanja di ${storeName}.`,
-        accountEmail: '',
-        accountPassword: '',
-        accountProfil: '',
-        accountPin: ''
-      });
-
-      const batch = writeBatch(db);
-      if (customerUpdated) {
-        batch.set(custRef, { items: customers });
-      }
-      batch.set(trxRef, { items: transaksis });
-
-      // Atomically add live_orders to trigger UI sync only AFTER customers are saved
-      const liveOrdersRef = doc(collection(db, 'live_orders'));
-      batch.set(liveOrdersRef, {
-        storeUid: currentStoreUid,
-        nama: name,
-        wa: phone,
-        produk: currentSelectedProduct.nama,
-        harga: currentSelectedProduct.harga,
-        durasi: currentSelectedProduct.durasi,
-        catatan: 'Dari Landing Page',
-        timestamp: serverTimestamp(),
-        status: 'pending',
-        invoice: currentInvoiceNumber
-      });
-
-      await batch.commit();
-    }
-
-    // Success -> Show QRIS
-    document.getElementById('checkoutModal').classList.remove('active');
-    
-    document.getElementById('qrisTotal').textContent = formatRupiah(currentSelectedProduct.harga);
-    document.getElementById('qrisInvoice').textContent = currentInvoiceNumber;
-    
-    const qrisImgEl = document.querySelector('.qris-img');
-    if (qrisImgEl) {
-      console.log('Mobile Debug - URL QRIS:', currentQrisUrl);
-      const safeUrl = currentQrisUrl && currentQrisUrl.trim() !== '' ? currentQrisUrl : 'https://placehold.co/400x400/png?text=QRIS+Belum+Diatur';
-      
-      qrisImgEl.src = safeUrl;
-      qrisImgEl.onerror = function() {
-        console.error('Mobile Debug - Gagal load QRIS URL:', this.src);
-        this.onerror = null;
-        this.src = 'https://placehold.co/400x400/png?text=QRIS+Belum+Diaturs';
-      };
-    }
-
-    document.getElementById('qrisModal').classList.add('active');
-
-  } catch (err) {
-    console.error(err);
-    alert('Terjadi kesalahan. Silakan coba lagi.');
-  } finally {
-    isOrderSubmitting = false;
-    btn.textContent = "Lanjut Pembayaran";
-    btn.disabled = false;
-  }
-});
-
-// 5. Confirm Payment
-document.getElementById('btnConfirmPayment').addEventListener('click', async () => {
-  const btn = document.getElementById('btnConfirmPayment');
-  btn.textContent = "Mengonfirmasi...";
-  btn.disabled = true;
-
-  try {
-    // Redirect to WhatsApp
-    const waText = `Halo, saya sudah melakukan pembayaran.\n\nNama: ${document.getElementById('custName').value}\nNomor: ${document.getElementById('custWa').value}\nProduk: ${currentSelectedProduct.nama}\nDurasi: ${currentSelectedProduct.durasi} Hari\nTotal: ${formatRupiah(currentSelectedProduct.harga)}\n\nInvoice: ${currentInvoiceNumber}\n\nMohon segera diproses. Terima kasih.`;
-    
-    let adminWa = storeWa || '6281234567890'; // fallback
-    window.location.href = `https://wa.me/${adminWa}?text=${encodeURIComponent(waText)}`;
-
-  } catch(err) {
-    console.error(err);
-    alert('Terjadi kesalahan saat konfirmasi.');
-    btn.textContent = "Saya Sudah Transfer";
-    btn.disabled = false;
-  }
-});
-
-// Initialize on load
-init();
-
-// 6. Warranty Claim Submission
-let isSubmitting = false;
-
-function showToast(msg, type = 'success') {
-  const t = document.createElement('div');
-  t.textContent = msg;
-  t.style.position = 'fixed';
-  t.style.bottom = '20px';
-  t.style.left = '50%';
-  t.style.transform = 'translateX(-50%)';
-  t.style.background = type === 'success' ? '#10B981' : '#EF4444';
-  t.style.color = '#fff';
-  t.style.padding = '12px 24px';
-  t.style.borderRadius = '8px';
-  t.style.fontWeight = '600';
-  t.style.zIndex = '9999';
-  t.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-  document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => t.remove(), 500); }, 3000);
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-const handleWarrantySubmit = async (e) => {
-  e.preventDefault();
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: var(--bg-card);
+}
 
-  if (isSubmitting) return;
+.brand-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
 
-  const btn = document.getElementById('btnSubmitWarranty');
-  isSubmitting = true;
-  btn.textContent = "Mengirim...";
-  btn.disabled = true;
+/* BUTTONS */
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  try {
-    const wPhoneRaw = document.getElementById('wPhone').value.trim();
-    const wEmail = document.getElementById('wEmail').value.trim();
-    const wProductId = document.getElementById('wProduct').value;
-    const wInvoice = document.getElementById('wInvoice').value.trim();
-    const wDesc = document.getElementById('wDesc').value.trim();
-    const fileInput = document.getElementById('wAttachment');
-    const file = fileInput.files[0];
+.btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 15px var(--accent-glow);
+  transform: translateY(-2px);
+}
 
-    // Validasi
-    if (!wPhoneRaw || !wProductId || !wInvoice || !wDesc || !file) {
-      throw new Error('Lengkapi semua field wajib beserta buktinya.');
-    }
+.btn-primary-outline {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
 
-    const selectedPackage = window._paketsData?.find(p => String(p.id) === String(wProductId));
-    if (!selectedPackage) {
-      throw new Error('Produk/Layanan yang dipilih tidak valid.');
-    }
-    
-    if (file.size > 5 * 1024 * 1024) {
-      throw new Error('Ukuran file maksimal 5 MB.');
-    }
+.btn-primary-outline:hover {
+  background: var(--bg-elevated);
+  border-color: var(--text-muted);
+}
 
-    const wPhone = formatPhone(wPhoneRaw);
+.btn-block {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+}
 
-    console.log('Uploading proof file to Cloudinary...');
+/* HERO */
+.hero {
+  position: relative;
+  padding: 110px 20px 60px;
+  text-align: center;
+  overflow: hidden;
+}
 
-    const cloudName = 'djz7gnki1'; 
-    const uploadPreset = 'subflow_warranty'; 
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', uploadPreset);
+.hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  z-index: -1;
+  opacity: 0.6;
+}
 
-    let proofUrl;
-    try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Gagal mengunggah gambar ke Cloudinary');
-      }
-      
-      const data = await response.json();
-      proofUrl = data.secure_url;
-      
-    } catch (error) {
-      console.error('Cloudinary Upload Error:', error);
-      showToast('Upload bukti gagal. Silakan periksa koneksi atau kredensial Cloudinary Anda.', 'error');
-      throw error;
-    }
+.badge-premium {
+  display: inline-block;
+  background: rgba(225, 29, 72, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(225, 29, 72, 0.2);
+  padding: 6px 16px;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
 
-    console.log('Saving warranty claim to Firestore...');
+.hero-title {
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+  background: linear-gradient(to right, #fff, #9CA3AF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-    // Simpan ke Firestore
-    await addDoc(collection(db, 'warranty_claims'), {
-      whatsapp: wPhone,
-      email: wEmail || '',
-      packageId: selectedPackage.id,
-      packageName: selectedPackage.nama,
-      serviceName: selectedPackage.nama_aplikasi || selectedPackage.nama,
-      duration: selectedPackage.durasi || 0,
-      productName: selectedPackage.nama, // Backward compatibility
-      invoiceId: wInvoice,
-      issue: wDesc,
-      proofUrl: proofUrl,
-      proofFileName: file.name,
-      status: 'Menunggu Diproses',
-      source: 'landing-page',
-      storeUid: currentStoreUid, // Disimpan untuk filter di dashboard admin
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
+.hero-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto 32px;
+}
 
-    // Sukses
-    showToast('Klaim garansi berhasil dikirim.', 'success');
-    document.getElementById('warrantyForm').reset();
-    document.getElementById('warrantyModal').classList.remove('active');
+/* DESCRIPTION SECTION */
+.description-section {
+  padding: 0 20px 40px;
+  max-width: 800px;
+  margin: 0 auto;
+}
 
-  } catch (error) {
-    console.error('Warranty submit failed:', error);
-    alert(error.message);
-    showToast(error.message || 'Gagal mengirim klaim garansi.', 'error');
-  } finally {
-    isSubmitting = false;
-    btn.textContent = "Kirim Klaim";
-    btn.disabled = false;
+.desc-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.desc-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.desc-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* PRODUCTS SECTION */
+.products-section {
+  padding: 40px 20px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.section-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* PRODUCT CARD */
+.product-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  border-color: #4B5563;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+.product-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* LOGO CSS BERDASARKAN KETENTUAN */
+.product-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #111827;
+  padding: 8px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+.product-category {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+  background: rgba(225, 29, 72, 0.1);
+  padding: 3px 6px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.product-price {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  font-family: 'DM Mono', monospace;
+}
+
+.product-price span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.product-card .btn-primary {
+  margin-top: auto;
+  width: 100%;
+}
+
+/* SKELETON */
+.skeleton {
+  min-height: 200px;
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-elevated) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border: none;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
   }
-};
 
-document.getElementById('warrantyForm')?.addEventListener('submit', handleWarrantySubmit);
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* MODALS */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header.no-border {
+  border-bottom: none;
+  padding-bottom: 10px;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.btn-close {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.btn-close:hover {
+  color: #fff;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+/* ORDER SUMMARY */
+.order-summary {
+  background: var(--bg-elevated);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--bg-main);
+  padding: 6px;
+}
+
+.summary-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.summary-durasi {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.summary-price {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+/* FORMS */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+.form-input {
+  width: 100%;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* QRIS */
+.text-center {
+  text-align: center;
+}
+
+.qris-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.qris-box {
+  background: #fff;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  display: inline-block;
+  margin-bottom: 24px;
+}
+
+.qris-img {
+  width: 100%;
+  max-width: 250px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.payment-details {
+  background: var(--bg-elevated);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.total-tagihan {
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+/* FOOTER */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 30px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.footer-brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.footer-copy {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .nav-container {
+    padding: 0 16px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-logo {
+    width: 24px;
+    height: 24px;
+  }
+
+  .brand-name {
+    font-size: 0.95rem;
+  }
+
+  .navbar .btn-primary-outline {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .hero {
+    padding: 80px 16px 30px;
+  }
+
+  .badge-premium {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    margin-bottom: 16px;
+  }
+
+  .hero-title {
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .product-logo {
+    width: 40px;
+    height: 40px;
+    padding: 6px;
+    border-radius: 10px;
+  }
+
+  .product-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .product-name {
+    font-size: 0.85rem;
+  }
+
+  .product-category {
+    font-size: 0.7rem;
+    padding: 2px 4px;
+  }
+
+  .product-price {
+    font-size: 0.95rem;
+  }
+
+  .btn-primary {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .product-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .qris-img {
+    max-width: 200px;
+  }
+}
