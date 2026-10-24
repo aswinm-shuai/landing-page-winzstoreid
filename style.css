@@ -1106,3 +1106,53 @@ a:focus-visible,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Perbaikan HP (layar 520px ke bawah) ---------- */
+@media (max-width: 520px) {
+  /* "Lihat Produk" disembunyikan, fungsinya sudah ada di tombol hero */
+  .nav-container .btn-primary-outline:not(#btnNavWarranty) {
+    display: none;
+  }
+
+  .brand-name {
+    max-width: none;
+    font-size: 1rem;
+  }
+
+  /* Klaim Garansi jadi tombol bergaris yang jelas */
+  .navbar #btnNavWarranty {
+    min-height: 42px;
+    padding: 8px 14px;
+    border-color: var(--ink) !important;
+    background: var(--surface);
+    box-shadow: var(--hard-sm);
+    color: var(--ink) !important;
+    font-size: 0.85rem;
+  }
+
+  .navbar #btnNavWarranty:hover {
+    text-decoration: none;
+    color: var(--blue) !important;
+  }
+
+  .hero {
+    padding-bottom: 48px;
+  }
+
+  /* Stiker lebih kecil dan dekat ke tombol */
+  .hero-glow {
+    width: 116px;
+    margin: 36px 18px 26px 0;
+  }
+
+  .hero-glow::before {
+    font-size: 0.95rem;
+  }
+
+  .hero-glow::after {
+    bottom: -22px;
+    left: -62px;
+    padding: 7px 13px;
+    font-size: 0.78rem;
+  }
+}
