@@ -3,10 +3,11 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Premium Store</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -17,54 +18,142 @@
   <nav class="navbar">
     <div class="nav-container">
       <div class="brand">
-        <img src="landing-page/assets/WhatsApp Image 2026-05-02 at 23.45.16.jpeg" alt="Logo" class="brand-logo"
-          id="storeLogo">
+      
         <span class="brand-name" id="storeName">Premium Store</span>
       </div>
-      <div style="display:flex;gap:12px;align-items:center;">
-        <button class="btn-primary-outline" id="btnNavWarranty" style="border-color:transparent;color:var(--text-muted);">Klaim Garansi</button>
-        <a href="#products" class="btn-primary-outline">Lihat Produk</a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home">Beranda</a></li>
+        <li><a href="#products">Produk</a></li>
+        <li><a href="#cara-order">Cara Order</a></li>
+        <li><a href="#testimoni">Testimoni</a></li>
+        <li><a href="#garansi">Garansi</a></li>
+        <li class="nav-menu-only"><a href="#" id="navMenuClaim">Klaim Garansi</a></li>
+      </ul>
+      <div>
+        <button class="btn-primary-outline" id="btnNavWarranty">Klaim Garansi</button>
+        <button class="nav-toggle" id="navToggle" aria-label="Buka menu" aria-expanded="false" aria-controls="navLinks"><i class="bi bi-list"></i></button>
       </div>
     </div>
   </nav>
 
-  <!-- HERO SECTION -->
-  <header class="hero">
+  <!-- HERO -->
+  <header class="hero" id="home">
     <div class="hero-content">
-      <div class="badge-premium">🚀 Layanan Premium Terpercaya</div>
-      <h1 class="hero-title">Akses Hiburan Tanpa Batas</h1>
-      <p class="hero-subtitle">Dapatkan akun premium aman, dan bergaransi dengan harga terbaik. Proses instan dan
-        aktivasi cepat.</p>
-      <a href="#products" class="btn-primary">Pesan Sekarang</a>
+      
+    <h1 class="hero-title">Your apps.<span>Your way.</span></h1>
+<p class="hero-subtitle">Everything you need for your digital lifestyle. Mulai dari streaming, musik, desain, sampai AI tools, semua pilihan favoritmu ada di satu tempat dengan harga yang lebih friendly.</p>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="hero-tile"><i class="bi bi-play-btn-fill"></i></div>
+      <div class="hero-tile is-light"><i class="bi bi-music-note-beamed"></i></div>
+      <div class="hero-tile is-light"><i class="bi bi-palette-fill"></i></div>
+      <div class="hero-tile"><i class="bi bi-stars"></i></div>
     </div>
     <div class="hero-glow"></div>
   </header>
 
-  <!-- DESCRIPTION SECTION -->
-  <section class="description-section">
-    <div class="desc-card">
-      <i class="bi bi-shield-check" style="font-size: 1.8rem; color: var(--accent); margin-bottom: 8px; display: inline-block;"></i>
-      <p class="desc-text">Winz Store adalah platform penyedia layanan akun premium yang aman, cepat, dan terpercaya. Proses instan, harga terjangkau, dan dukungan pelanggan siap membantu kapan saja.</p>
-    </div>
-  </section>
+  <!-- TENTANG (singkat) -->
+ 
+<section class="description-section" id="tentang">
+  <div class="about-inner">
+    <h2 class="about-title">Shop with ease.<span>Stay worry-free.</span></h2>
+    <p class="about-text">
+      Belanja digital essentials tanpa perlu overthinking.
+      Setiap pesanan diproses dengan aman, informasi akses
+      diberikan dengan jelas, dan garansi tersedia sesuai
+      ketentuan produk.
+    </p>
+  </div>
 
-  <!-- PRODUCTS SECTION -->
+  <ul class="about-points">
+    <li>
+      <i class="bi bi-shield-lock-fill"></i>
+      <div>
+        <strong>Safe Account Access</strong>
+        <span>Akses akun diberikan dengan informasi penggunaan yang jelas.</span>
+      </div>
+    </li>
+    <li>
+      <i class="bi bi-lightning-charge-fill"></i>
+      <div>
+        <strong>Quick & Easy Process</strong>
+        <span>Checkout praktis, pembayaran mudah, pesanan diproses admin.</span>
+      </div>
+    </li>
+    <li>
+      <i class="bi bi-patch-check-fill"></i>
+      <div>
+        <strong>Warranty Included</strong>
+        <span>Ada kendala? Hubungi admin dan ajukan klaim sesuai ketentuan garansi.</span>
+      </div>
+    </li>
+  </ul>
+</section>
+
+
+  <!-- PRODUK -->
   <section id="products" class="products-section">
     <div class="section-header">
-      <h2 class="section-title">Pilih Paket Anda</h2>
-      <p class="section-desc">Beragam pilihan layanan premium yang disesuaikan dengan kebutuhan Anda.</p>
-      
-      <div class="search-container" style="max-width:500px;margin:24px auto 0;position:relative;">
-        <i class="bi bi-search" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-muted);"></i>
-        <input type="text" id="searchInput" class="form-input" style="padding-left:42px;background:var(--bg-elevated);border-radius:99px;" placeholder="Cari aplikasi premium...">
+      <div>
+        <h2 class="section-title">Pilih paket anda</h2>
+        <p class="section-desc">Beragam layanan premium sesuai kebutuhan Anda.</p>
+      </div>
+      <div class="search-container" style="position:relative;">
+        <i class="bi bi-search" style="position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;"></i>
+        <input type="text" id="searchInput" class="form-input" style="padding-left:44px;" placeholder="Cari aplikasi premium...">
       </div>
     </div>
 
     <div id="productGrid" class="product-grid">
-      <!-- Skeleton Loading -->
       <div class="product-card skeleton"></div>
       <div class="product-card skeleton"></div>
       <div class="product-card skeleton"></div>
+      <div class="product-card skeleton"></div>
+    </div>
+  </section>
+
+  <!-- CARA ORDER -->
+  <section class="steps-section" id="cara-order">
+    <div class="block-inner">
+      <h2 class="section-title">Cara order</h2>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span><div><h3>Pilih paket</h3><p>Pilih layanan dan durasi yang kamu mau.</p></div></div>
+        <div class="step"><span class="step-num">2</span><div><h3>Bayar lewat QRIS</h3><p>Scan dengan e-wallet atau m-banking.</p></div></div>
+        <div class="step"><span class="step-num">3</span><div><h3>Akun aktif</h3><p>Kirim bukti bayar ke WhatsApp. Admin langsung proses.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONI -->
+  <section class="testi-section" id="testimoni">
+    <div class="block-inner">
+      <h2 class="section-title">Kata pembeli</h2>
+      <p class="section-desc">Screenshot chat asli dari pembeli Winz Store.</p>
+      <div class="testi-grid">
+        <!-- Ganti tiap .testi-card dengan: <figure class="testi-card"><img src="assets/testi-1.jpg" alt="Chat pembeli"></figure> -->
+        <figure class="testi-card"><i class="bi bi-chat-quote"></i><span>Screenshot chat pembeli 1</span></figure>
+        <figure class="testi-card"><i class="bi bi-chat-quote"></i><span>Screenshot chat pembeli 2</span></figure>
+        <figure class="testi-card"><i class="bi bi-chat-quote"></i><span>Screenshot chat pembeli 3</span></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- GARANSI DAN FAQ -->
+  <section class="faq-section" id="garansi">
+    <div class="faq-inner">
+      <h2 class="section-title">Garansi dan FAQ</h2>
+      <details>
+        <summary>Berapa lama akun aktif setelah bayar?</summary>
+        <p>Setelah kamu kirim bukti bayar lewat WhatsApp, admin memproses pesananmu secepatnya.</p>
+      </details>
+      <details>
+        <summary>Bagaimana kalau akun bermasalah?</summary>
+        <p>Klaim garansi lewat tombol "Klaim Garansi". Isi invoice, jelaskan kendala, dan lampirkan bukti.</p>
+      </details>
+      <details>
+        <summary>Pembayaran lewat apa?</summary>
+        <p>Pembayaran memakai QRIS. Semua e-wallet dan m-banking yang mendukung QRIS bisa dipakai.</p>
+      </details>
     </div>
   </section>
 
@@ -73,8 +162,8 @@
     <div class="footer-content" style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:12px;align-items:center;">
       <div class="footer-brand" id="footerStoreName">Premium Store</div>
       <div style="display:flex;gap:16px;font-size:0.9rem;">
-        <a href="#products" style="color:var(--text-muted);text-decoration:none;">Produk</a>
-        <a href="#" id="btnFooterWarranty" style="color:var(--text-muted);text-decoration:none;">Klaim Garansi</a>
+        <a href="#products" style="text-decoration:none;">Produk</a>
+        <a href="#" id="btnFooterWarranty" style="text-decoration:none;">Klaim Garansi</a>
       </div>
       <div class="footer-copy">&copy; <span id="currentYear"></span> All rights reserved. Powered by Subflow.</div>
     </div>
@@ -85,13 +174,12 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title">Selesaikan Pesanan</h3>
-        <button class="btn-close" id="closeCheckoutBtn"><i class="bi bi-x-lg"></i></button>
+        <button class="btn-close" id="closeCheckoutBtn" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="modal-body">
         <div class="order-summary">
           <div class="summary-product">
-            <img src="landing-page/assets/WhatsApp Image 2026-05-02 at 23.45.16.jpeg" alt="Product"
-              id="checkoutProductImg" class="summary-img">
+            <img src="landing-page/assets/WhatsApp Image 2026-05-02 at 23.45.16.jpeg" alt="Product" id="checkoutProductImg" class="summary-img">
             <div>
               <div class="summary-title" id="checkoutProductName">Nama Produk</div>
               <div class="summary-durasi" id="checkoutProductDurasi">30 Hari</div>
@@ -123,7 +211,7 @@
         <h3 class="modal-title">Pembayaran QRIS</h3>
       </div>
       <div class="modal-body">
-        <p class="qris-desc">Silakan scan kode QR di bawah ini menggunakan aplikasi e-Wallet atau m-Banking Anda.</p>
+        <p class="qris-desc">Scan kode QR di bawah ini dengan aplikasi e-Wallet atau m-Banking Anda.</p>
 
         <div class="qris-box">
           <img src="assets/qris baru lagi.jpeg" alt="QRIS" class="qris-img">
@@ -152,9 +240,9 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title">Klaim Garansi</h3>
-        <button class="btn-close" id="closeWarrantyBtn"><i class="bi bi-x-lg"></i></button>
+        <button class="btn-close" id="closeWarrantyBtn" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
       </div>
-      <div class="modal-body" style="max-height:80vh;overflow-y:auto;">
+      <div class="modal-body">
         <form id="warrantyForm" class="checkout-form">
           <div class="form-group">
             <label>Nama Lengkap <span style="color:var(--accent);">*</span></label>
@@ -194,7 +282,7 @@
           <div style="font-size:3rem; color:#10B981; margin-bottom:16px;"><i class="bi bi-check-circle-fill"></i></div>
           <h4 style="font-size:1.2rem; margin-bottom:8px;">Klaim Berhasil Dikirim</h4>
           <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">Klaim garansi Anda sedang diproses. Mohon simpan nomor tiket berikut untuk melacak status.</p>
-          <div style="background:var(--bg-main); padding:16px; border-radius:var(--radius-md); border:1px dashed var(--border); margin-bottom:16px;">
+          <div style="background:var(--paper); padding:16px; border-radius:var(--radius-md); border:1px dashed var(--border); margin-bottom:16px;">
             <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Nomor Tiket:</div>
             <div style="font-size:1.25rem; font-weight:700; color:var(--accent); font-family:monospace;" id="wTicketNumber">WG-2026-000</div>
           </div>
@@ -203,6 +291,26 @@
       </div>
     </div>
   </div>
+  <script>
+    (function () {
+      var toggle = document.getElementById('navToggle');
+      var links = document.getElementById('navLinks');
+      function setOpen(o) {
+        links.classList.toggle('open', o);
+        toggle.setAttribute('aria-expanded', String(o));
+      }
+      toggle.addEventListener('click', function () { setOpen(!links.classList.contains('open')); });
+      links.addEventListener('click', function (e) {
+        var a = e.target.closest('a');
+        if (!a) return;
+        setOpen(false);
+        if (a.id === 'navMenuClaim') {
+          e.preventDefault();
+          document.getElementById('btnNavWarranty').click();
+        }
+      });
+    })();
+  </script>
 </body>
 
 </html>
